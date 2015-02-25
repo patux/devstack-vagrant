@@ -22,6 +22,19 @@ apt-get install -y git
 /usr/bin/git config --system url."https://github.com/".insteadOf git@github.com:
 /usr/bin/git config --system url."https://".insteadOf git://
 USEHTTPS
+$addswap= <<SWAPON
+if [ ! -f /swapfile ]; then
+    MEM=$(grep MemTotal /proc/meminfo | awk '{print $2}')
+    if [ $MEM -lt 2097152 ]; then
+        SWAP=`echo "$(($MEM * 2))"`
+    else
+        SWAP=`echo "$(($MEM + 2097152 ))"`
+    fi
+    /bin/dd if=/dev/zero of=/swapfile bs=1k count=$SWAP
+    /sbin/mkswap /swapfile
+    /sbin/swapon /swapfile
+fi
+SWAPON
 
 
 def configure_vm(name, vm, conf)
@@ -56,6 +69,8 @@ def configure_vm(name, vm, conf)
     end
   end
 
+  # shell provision
+  vm.provision :shell, :inline => $addswap
   # puppet provisioning
   vm.provision "puppet" do |puppet|
     puppet.manifests_path = "puppet/manifests"
