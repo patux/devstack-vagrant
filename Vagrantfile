@@ -36,6 +36,9 @@ if [ ! -f /swapfile ]; then
 fi
 SWAPON
 
+$copysshkeytostackuser= <<COPYSSHKEY
+cat /home/vagrant/.ssh/authorized_keys >> /home/stack/.ssh/authorized_keys
+COPYSSHKEY
 
 def configure_vm(name, vm, conf)
   vm.hostname = conf["hostname_#{name}"] || name
@@ -102,6 +105,7 @@ def configure_vm(name, vm, conf)
       shell.inline = "sudo su - stack -c 'cd ~/grenade && ./grenade.sh'"
     end
   end
+  vm.provision :shell, :inline => $copysshkeytostackuser
 
 end
 
@@ -158,6 +162,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # If true, then any SSH connections made will enable agent forwarding.
   # Default value: false
   config.ssh.forward_agent = true
+  #config.ssh.username = 'stack'
 
   # Share an additional folder to the guest VM. The first argument is
   # the path on the host to the actual folder. The second argument is
